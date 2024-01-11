@@ -1,0 +1,47 @@
+---
+title: "Westcoast SST"
+output: html_document
+date: "2024-01-11"
+---
+
+```{r packages}
+library(rerddapXtracto)
+library(rerddap)
+library(wesanderson)
+library(here)
+```
+
+```{r}
+dum.col <- (wes_palette("Zissou1", 11, type = "continuous"))
+
+# Coefficient of variation function
+cv <- function(x) {sd(na.omit(x))/mean(na.omit(x))}
+```
+
+
+```{r import_csv}
+# Specify the path to the folder containing CSV files
+folder_path <- here::here("Coastal Ocean Polygon")
+
+# Get a list of CSV files in the working directory
+csv_files <- list.files(path = folder_path, pattern = "\\.csv$")
+
+# Loop through each CSV file
+for (file in csv_files) {
+  
+  # Extract the name without the extension
+  name <- sub("\\.csv$", "", file)
+  
+  # Read the CSV file and assign it to a variable with the extracted name
+  assign(name, read.csv(file))
+  
+  # Print a message indicating the file has been loaded
+  cat("File", file, "has been loaded and assigned to", name, "\n")
+}
+
+# Example: Accessing the data of poly1
+# print(poly1)
+
+
+```
+
