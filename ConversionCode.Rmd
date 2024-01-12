@@ -11,6 +11,7 @@ library(wesanderson)
 library(here)
 ```
 
+# Polygons
 ```{r}
 dum.col <- (wes_palette("Zissou1", 11, type = "continuous"))
 
@@ -19,29 +20,111 @@ cv <- function(x) {sd(na.omit(x))/mean(na.omit(x))}
 ```
 
 
-```{r import_csv}
-# Specify the path to the folder containing CSV files
-folder_path <- here::here("Coastal Ocean Polygon")
+```{r import_polygon_coords_csv}
+# Coastal ocean subregion 0: Transition Zone
+poly0 <- read.csv(here::here("Polygon Coordinates", "poly0_coord_020215.csv"))
 
-# Get a list of CSV files in the working directory
-csv_files <- list.files(path = folder_path, pattern = "\\.csv$")
+# Coastal ocean subregion 1: Puget Sound 
+poly1 <- read.csv(here::here("Coastal Ocean Polygon", "poly1_coord_020215.csv"))
 
-# Loop through each CSV file
-for (file in csv_files) {
-  
-  # Extract the name without the extension
-  name <- sub("\\.csv$", "", file)
-  
-  # Read the CSV file and assign it to a variable with the extracted name
-  assign(name, read.csv(file))
-  
-  # Print a message indicating the file has been loaded
-  cat("File", file, "has been loaded and assigned to", name, "\n")
-}
+# Coastal ocean subregion 2: WA Coast & Columbia R
+poly2 <- read.csv(here::here("Coastal Ocean Polygon", "poly2_coord_020215.csv"))
 
-# Example: Accessing the data of poly1
-# print(poly1)
+# Coastal ocean subregion 3: N and Central OR Coast
+poly3 <- read.csv(here::here("Coastal Ocean Polygon", "poly3_coord_020215.csv"))
+
+# Coastal ocean subregion 4: S OR and N CA Coast
+poly4 <- read.csv(here::here("Coastal Ocean Polygon", "poly4_coord_020215.csv"))
+
+# Coastal ocean subregion 5: Mendocino Coast and San Fran Coast
+poly5 <- read.csv(here::here("Coastal Ocean Polygon", "poly5_coord_020215.csv"))
+
+# Coastal ocean subregion 6: Monterey Bay
+poly6 <- read.csv(here::here("Coastal Ocean Polygon", "poly6_coord_020215.csv"))
+
+# Coastal ocean subregion 7: S CA Bight
+poly7 <- read.csv(here::here("Coastal Ocean Polygon", "poly7_coord_020215.csv"))
+```
+
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(maps)
+
+# Create a base map for the west coast of North America
+west_coast_CA <- map_data("world", region =  "Canada") %>% 
+                         filter( subregion %in% c("Vancouver Island"))
+
+west_coast_US<- map_data("state") %>% 
+  filter(region %in% c("california", "oregon", "washington"))
+
+west_coast <- rbind(west_coast_CA,west_coast_US)
+
+world<-map_data("world")
+# Specify the latitude and longitude limits
+lat_limits <- c(32, 49)  # Adjust as needed
+long_limits <- c(-130, -117)  # Adjust as needed
+
+# Create a ggplot with the base map
+ggplot() +
+  geom_polygon(data = west_coast, aes(x = long, y = lat, group = group), fill = "white", color = "black") +
+  geom_line(data = poly2[17:30,], aes(x = x, y = y), color = "red", size = 1) +
+  geom_line(data = poly1[1:100,], aes(x = x, y = y), color = "blue", size = 1) +
+    geom_line(data = polyN1, aes(x = x, y = y), color = "green", size = 1) +
+      geom_line(data = polyN2, aes(x = x, y = y), color = "orange", size = 1) +
+        geom_line(data = polyN3, aes(x = x, y = y), color = "purple", size = 1) +
+  ggtitle("Map of the West Coast from California to Canada") +
+  theme_minimal() 
+  # xlim(long_limits) +
+  # ylim(lat_limits)
+
 
 
 ```
 
+```{r rbind_poly_coord_subregions}
+# Coastal ocean subregion N1: Off Vancouver Island, for coho
+polyN1 <- rbind(poly2[17:30,], poly1[1:100,])
+polyN1 <- rbind(polyN1, c(-128,51.5), c(-130.75,50.75), c(-128.5, 49),  c(-126.0477, 48.1148))
+
+# Coastal ocean subregion N2: Off Vancouver Island through Queen Charlotte Islands
+polyN2 <- rbind(poly2[17:30,], poly1[1:100,])
+polyN2 <- rbind(polyN2, c(-128,55.5), c(-135,54), c(-128.5, 49),  c(-126.0477, 48.1148))
+
+# Coastal ocean subregion N3: Southeast Alaska (not including Yakutat Coast)
+polyN3 <- data.frame(rbind( c(-128,55.5), c(-135,54),
+                 c(-141, 58), c(-135, 59), c(-128,55.5)))
+names(polyN3) <- c("x","y")
+```
+
+
+```{r fct_import_csv}
+read_csv_files_assign_individual <- function(folder_path) {
+  # Get a list of CSV files in the folder
+  csv_files <- list.files(folder_path, pattern = "\\.csv$", full.names = TRUE)
+
+  # Loop through each CSV file
+  for (i in seq_along(csv_files)) {
+    # Read the CSV file and assign the name dynamically
+    df <- read.csv(csv_files[i])
+
+    # Extract the "poly#" part from the file name
+    name <- gsub("^(poly[[:digit:]]+)_.*$", "\\1", basename(csv_files[i]))
+
+    # Assign the data frame to the variable with the extracted name
+    assign(name, df, envir = .GlobalEnv)
+  }
+}
+
+# Specify the path to the folder containing CSV files
+folder_path <- here::here("Coastal Ocean Polygon")
+read_csv_files_assign_individual(folder_path)
+```
+
+
+
+# MUR
+
+
+# Pathfinder
